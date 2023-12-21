@@ -245,6 +245,7 @@ static void tagtonext(const Arg *arg);
 static void tagtoprev(const Arg *arg);
 static void togglebar(const Arg *arg);
 static void togglefloating(const Arg *arg);
+static void togglefullscr(const Arg *arg);
 static void toggletag(const Arg *arg);
 static void toggleview(const Arg *arg);
 static void freeicon(Client *c);
@@ -1745,10 +1746,69 @@ propertynotify(XEvent *e)
 }
 
 void
+saveSession(void)
+{
+	FILE *fw = fopen(SESSION_FILE, "w");
+	for (Client *c = selmon->clients; c != NULL; c = c->next) { // get all the clients with their tags and write them to the file
+		fprintf(fw, "%lu %u\n", c->win, c->tags);
+	}
+	fclose(fw);
+}
+
+void
+togglefullscr(const Arg *arg)
+{
+  if(selmon->sel)
+    setfullscreen(selmon->sel, !selmon->sel->isfullscreen);
+}
+
+void
+restoreSession(void)
+{
+	// restore session
+	FILE *fr = fopen(SESSION_FILE, "r");
+	if (!fr)
+		return;
+
+	char *str = malloc(23 * sizeof(char)); // allocate enough space for excepted input from text file
+	while (fscanf(fr, "%[^\n] ", str) != EOF) { // read file till the end
+		long unsigned int winId;
+		unsigned int tagsForWin;
+		int check = sscanf(str, "%lu %u", &winId, &tagsForWin); // get data
+		if (check != 2) // break loop if data wasn't read correctly
+			break;
+		
+		for (Client *c = selmon->clients; c ; c = c->next) { // add tags to every window by winId
+			if (c->win == winId) {
+				c->tags = tagsForWin;
+				break;
+			}
+		}
+    }
+
+	for (Client *c = selmon->clients; c ; c = c->next) { // refocus on windows
+		focus(c);
+		restack(c->mon);
+	}
+
+	for (Monitor *m = selmon; m; m = m->next) // rearrange all monitors
+		arrange(m);
+
+	free(str);
+	fclose(fr);
+	
+	// delete a file
+	remove(SESSION_FILE);
+}
+
+void
 quit(const Arg *arg)
 {
 	if(arg->i) restart = 1;
 	running = 0;
+
+	if (restart == 1)
+		saveSession();
 }
 
 Monitor *
@@ -1782,6 +1842,13 @@ resizeclient(Client *c, int x, int y, int w, int h)
 	c->oldw = c->w; c->w = wc.width = w;
 	c->oldh = c->h; c->h = wc.height = h;
 	wc.border_width = c->bw;
+	if (((nexttiled(c->mon->clients) == c && !nexttiled(c->next))
+	    || &monocle == c->mon->lt[c->mon->sellt]->arrange)
+	    && !c->isfullscreen && !c->isfloating) {
+		c->w = wc.width += c->bw * 2;
+		c->h = wc.height += c->bw * 2;
+		wc.border_width = 0;
+	}
 	XConfigureWindow(dpy, c->win, CWX|CWY|CWWidth|CWHeight|CWBorderWidth, &wc);
 	configure(c);
 	XSync(dpy, False);
@@ -2904,6 +2971,7 @@ main(int argc, char *argv[])
 		die("pledge");
 #endif /* __OpenBSD__ */
 	scan();
+	restoreSession();
 	run();
 	if(restart) execvp(argv[0], argv);
 	cleanup();

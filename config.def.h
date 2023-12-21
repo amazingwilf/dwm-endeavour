@@ -1,5 +1,7 @@
 /* See LICENSE file for copyright and license details. */
 
+#define SESSION_FILE "/tmp/dwm-session"
+
 /* appearance */
 static const unsigned int borderpx  = 2;        /* border pixel of windows */
 static const unsigned int snap      = 32;       /* snap pixel */
@@ -11,7 +13,7 @@ static const unsigned int gappih    = 20;       /* horiz inner gap between windo
 static const unsigned int gappiv    = 20;       /* vert inner gap between windows */
 static const unsigned int gappoh    = 10;       /* horiz outer gap between windows and screen edge */
 static const unsigned int gappov    = 10;       /* vert outer gap between windows and screen edge */
-static       int smartgaps          = 0;        /* 1 means no outer gap when there is only one window */
+static       int smartgaps          = 1;        /* 1 means no outer gap when there is only one window */
 
 #define ICONSIZE (bh - 6)   /* icon size */
 #define ICONSPACING 10 /* space between icon and title */
@@ -150,6 +152,7 @@ static const Key keys[] = {
 	{ MODKEY,						XK_comma,  cyclelayout,    {.i = -1 } },
 	{ MODKEY,						XK_period, cyclelayout,    {.i = +1 } },
 	{ MODKEY|ShiftMask,             XK_space,  togglefloating, {0} },
+	{ MODKEY|ShiftMask,             XK_f,      togglefullscr,  {0} },
 	{ MODKEY,                       XK_0,      view,           {.ui = ~0 } },
 	{ MODKEY|ShiftMask,             XK_0,      tag,            {.ui = ~0 } },
 	{ MODKEY,                       XK_Right,  viewnext,       {0} },

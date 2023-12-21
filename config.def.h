@@ -1,7 +1,5 @@
 /* See LICENSE file for copyright and license details. */
 
-#define SESSION_FILE "/tmp/dwm-session"
-
 /* appearance */
 static const unsigned int borderpx  = 2;        /* border pixel of windows */
 static const unsigned int snap      = 32;       /* snap pixel */
@@ -14,14 +12,17 @@ static const unsigned int gappiv    = 20;       /* vert inner gap between window
 static const unsigned int gappoh    = 10;       /* horiz outer gap between windows and screen edge */
 static const unsigned int gappov    = 10;       /* vert outer gap between windows and screen edge */
 static       int smartgaps          = 0;        /* 1 means no outer gap when there is only one window */
-														  //
+
+#define ICONSIZE (bh - 6)   /* icon size */
+#define ICONSPACING 10 /* space between icon and title */
+
 static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 1;        /* 0 means bottom bar */
-static const int user_bh            = 28;        /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
-static const char *fonts[]          = { "Hack Nerd Font:size=14", "JetBrainsMono Nerd Font:style=ExtraBold:size=13" };
-static const char dmenufont[]       = "Hack Nerd Font:size=14";
+static const int user_bh            = 30;        /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
+static const char *fonts[]          = { "Ubuntu:size=15", "JetBrainsMono Nerd Font:style=ExtraBold:size=13" };
+
 static const char col_gray1[]       = "#101010";
-static const char col_gray2[]       = "#444444";
+static const char col_gray2[]       = "#555555";
 static const char col_gray3[]       = "#abb2bf";
 static const char col_blue[]        = "#61afef";
 static const char col_gray4[]       = "#ededed";
@@ -67,13 +68,15 @@ static const Rule rules[] = {
 	 *	WM_CLASS(STRING) = instance, class
 	 *	WM_NAME(STRING) = title
 	 */
-	{ .class = "Lxappearance", .isfloating = 1 },
+	{ .class = "Lxappearance", .isfloating = 1, .floatpos = "50% 50% -1h -1w" },
 	{ .class = "firefox", .tags = 1 << 1 },
+	{ .class = "Nemo", .tags = 1 << 2 },
 };
 
 static const char *const autostart[] = {
 	"/usr/lib/polkit-gnome/polkit-authentication-agent-1", NULL,
 	"nitrogen", "--restore", NULL,
+	"picom", "-b", NULL,
 	NULL /* terminate */
 };
 
@@ -113,18 +116,17 @@ static const Layout layouts[] = {
 	{ MODKEY|ShiftMask,             KEY,      tag,            {.ui = 1 << TAG} }, \
 	{ MODKEY|ControlMask|ShiftMask, KEY,      toggletag,      {.ui = 1 << TAG} },
 
-/* helper for spawning shell commands in the pre dwm-5.0 fashion */
-#define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
-
-/* commands */
-static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
-static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
 static const char *termcmd[]  = { "alacritty", NULL };
+static const char *roficmd[]	= { "rofi", "-show", "drun", NULL };
+static const char *firefoxcmd[]	= { "firefox", NULL };
+static const char *nemocmd[]	= { "nemo", NULL };
 
 static const Key keys[] = {
 	/* modifier                     key        function        argument */
-	{ MODKEY,                       XK_space,  spawn,          {.v = dmenucmd } },
 	{ MODKEY,                       XK_Return, spawn,          {.v = termcmd } },
+	{ MODKEY,                       XK_space,  spawn,          {.v = roficmd } },
+	{ MODKEY,                       XK_w,      spawn,          {.v = firefoxcmd } },
+	{ MODKEY,                       XK_e,      spawn,          {.v = nemocmd } },
 	{ MODKEY|ShiftMask,             XK_b,      togglebar,      {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },

@@ -17,18 +17,40 @@ static       int smartgaps          = 0;        /* 1 means no outer gap when the
 														  //
 static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 1;        /* 0 means bottom bar */
-static const char *fonts[]          = { "Hack Nerd Font:size=18" };
-static const char dmenufont[]       = "Hack Nerd Font:size=18";
-static const char col_gray1[]       = "#222222";
+static const int user_bh            = 28;        /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
+static const char *fonts[]          = { "Hack Nerd Font:size=14", "JetBrainsMono Nerd Font:style=ExtraBold:size=13" };
+static const char dmenufont[]       = "Hack Nerd Font:size=14";
+static const char col_gray1[]       = "#101010";
 static const char col_gray2[]       = "#444444";
 static const char col_gray3[]       = "#abb2bf";
 static const char col_blue[]        = "#61afef";
 static const char col_gray4[]       = "#ededed";
 static const char col_cyan[]        = "#0101d1";
 static const char *colors[][3]      = {
-	/*               fg         bg         border   */
-	[SchemeNorm] = { col_gray3, col_gray1, col_gray2 },
-	[SchemeSel]  = { col_gray4, col_cyan,  col_blue  },
+	/*						fg			bg         border   */
+	[SchemeNorm]		= { col_gray3,	col_gray1,	col_gray2 },
+	[SchemeSel]			= { col_gray4,	col_cyan,	col_blue  },
+	[SchemeLtSymbol]	= { col_blue,	col_gray1,	col_gray1 },
+	[SchemeTagsNorm]	= { col_gray2,	col_gray1,	col_gray1 },
+	[SchemeTagsOcc]		= { col_blue,	col_gray1,	col_gray1 },
+	[SchemeTagsSel]		= { col_gray4,	col_cyan,	col_gray1 },
+	[SchemeTitleNorm]	= { col_gray3,	col_gray1,	col_gray1 },
+	[SchemeTitleSel]	= { col_blue,	col_gray1,	col_gray1 },
+};
+
+static const unsigned int baralpha = 0xb0;
+static const unsigned int borderalpha = OPAQUE;
+
+static const unsigned int alphas[][3]      = {
+    /*						fg      bg        border*/
+    [SchemeNorm]		= { OPAQUE, baralpha, borderalpha },
+	[SchemeSel]			= { OPAQUE, baralpha, borderalpha },
+	[SchemeLtSymbol]	= { OPAQUE, baralpha, borderalpha },
+	[SchemeTagsNorm]	= { OPAQUE, baralpha, borderalpha },
+	[SchemeTagsOcc]		= { OPAQUE, baralpha, borderalpha },
+	[SchemeTagsSel]		= { OPAQUE, baralpha, borderalpha },
+	[SchemeTitleNorm]	= { OPAQUE, baralpha, borderalpha },
+	[SchemeTitleSel]	= { OPAQUE, baralpha, borderalpha },
 };
 
 /* tagging */
@@ -44,6 +66,11 @@ static const Rule rules[] = {
 	{ .class = "firefox", .tags = 1 << 1 },
 };
 
+static const char *const autostart[] = {
+	"/usr/lib/polkit-gnome/polkit-authentication-agent-1", NULL,
+	"nitrogen", "--restore", NULL,
+	NULL /* terminate */
+};
 
 /* layout(s) */
 static const float mfact     = 0.50; /* factor of master area size [0.05..0.95] */
@@ -56,7 +83,8 @@ static const int lockfullscreen = 1; /* 1 will force focus on the fullscreen win
 
 static const Layout layouts[] = {
 	/* symbol     arrange function */
-	{ "[]=",      tile },    /* first entry is default */
+	{ "[]=",      tile },
+	{ "><>",      NULL },
 	{ "[M]",      monocle },
 	{ "[@]",      spiral },
 	{ "[\\]",     dwindle },
@@ -69,7 +97,6 @@ static const Layout layouts[] = {
 	{ ":::",      gaplessgrid },
 	{ "|M|",      centeredmaster },
 	{ ">M>",      centeredfloatingmaster },
-	{ "><>",      NULL },    /* no layout function means floating behavior */
 	{ NULL,       NULL },
 };
 
@@ -91,9 +118,9 @@ static const char *termcmd[]  = { "alacritty", NULL };
 
 static const Key keys[] = {
 	/* modifier                     key        function        argument */
-	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
-	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
-	{ MODKEY,                       XK_b,      togglebar,      {0} },
+	{ MODKEY,                       XK_space,  spawn,          {.v = dmenucmd } },
+	{ MODKEY,                       XK_Return, spawn,          {.v = termcmd } },
+	{ MODKEY|ShiftMask,             XK_b,      togglebar,      {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
 	{ MODKEY,                       XK_i,      incnmaster,     {.i = +1 } },
@@ -103,24 +130,21 @@ static const Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_h,      setcfact,       {.f = +0.25} },
 	{ MODKEY|ShiftMask,             XK_l,      setcfact,       {.f = -0.25} },
 	{ MODKEY|ShiftMask,             XK_o,      setcfact,       {.f =  0.00} },
-	{ MODKEY,                       XK_Return, zoom,           {0} },
 	{ MODKEY,                       XK_equal,  incrgaps,       {.i = +1 } },
 	{ MODKEY,                       XK_minus,  incrgaps,       {.i = -1 } },
 	{ MODKEY|ShiftMask,             XK_minus,  togglegaps,     {0} },
 	{ MODKEY|ShiftMask,             XK_equal,  defaultgaps,    {0} },
-	{ MODKEY,                       XK_Tab,    view,           {0} },
-	{ MODKEY|ShiftMask,             XK_c,      killclient,     {0} },
+	{ MODKEY,                       XK_q,      killclient,     {0} },
 	{ MODKEY,                       XK_t,      setlayout,      {.v = &layouts[0]} },
 	{ MODKEY,                       XK_f,      setlayout,      {.v = &layouts[1]} },
 	{ MODKEY,                       XK_m,      setlayout,      {.v = &layouts[2]} },
-	{ MODKEY,                       XK_space,  setlayout,      {0} },
+	{ MODKEY,                       XK_b,      setlayout,      {.v = &layouts[6]} },
+	{ MODKEY,                       XK_g,      setlayout,      {.v = &layouts[11]} },
+	{ MODKEY,						XK_comma,  cyclelayout,    {.i = -1 } },
+	{ MODKEY,						XK_period, cyclelayout,    {.i = +1 } },
 	{ MODKEY|ShiftMask,             XK_space,  togglefloating, {0} },
 	{ MODKEY,                       XK_0,      view,           {.ui = ~0 } },
 	{ MODKEY|ShiftMask,             XK_0,      tag,            {.ui = ~0 } },
-	{ MODKEY,                       XK_comma,  focusmon,       {.i = -1 } },
-	{ MODKEY,                       XK_period, focusmon,       {.i = +1 } },
-	{ MODKEY|ShiftMask,             XK_comma,  tagmon,         {.i = -1 } },
-	{ MODKEY|ShiftMask,             XK_period, tagmon,         {.i = +1 } },
 	{ MODKEY,                       XK_Right,  viewnext,       {0} },
 	{ MODKEY,                       XK_Left,   viewprev,       {0} },
 	{ MODKEY|ShiftMask,             XK_Right,  tagtonext,      {0} },

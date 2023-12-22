@@ -82,10 +82,12 @@ static const Rule rules[] = {
 	 *	WM_CLASS(STRING) = instance, class
 	 *	WM_NAME(STRING) = title
 	 */
-	{ .class = "Lxappearance", .isfloating = 1, .floatpos = "50% 50% 1024w 768h" },
+	{ .class = "Lxappearance", .isfloating = 1, .floatpos = "50% 50% -1w -1h" },
 	{ .class = "firefox", .tags = 1 << 1 },
 	{ .class = "Nemo", .tags = 1 << 2 },
 	{ .title = "spterm", .isfloating = 1, .scratchkey = 't', .floatpos = "50% 50% 75% 75%" },
+	{ .class = "Pavucontrol", .isfloating = 1, .scratchkey = 'p', .floatpos = "50% 50% -1w -1h" },
+	{ .class = "Spotify", .isfloating = 1, .scratchkey = 's', .floatpos = "50% 50% 95% 95%" },
 	{ .class = "Alacritty", .isterminal = 1 },
 	{ .title = "Event Tester", .noswallow = 1 },
 };
@@ -94,6 +96,9 @@ static const char *const autostart[] = {
 	"/usr/lib/polkit-gnome/polkit-authentication-agent-1", NULL,
 	"nitrogen", "--restore", NULL,
 	"picom", "-b", NULL,
+	"sxhkd", NULL,
+	"dunst", NULL,
+	"slstatus", NULL,
 	NULL /* terminate */
 };
 
@@ -133,23 +138,17 @@ static const Layout layouts[] = {
 	{ MODKEY|ShiftMask,             KEY,      tag,            {.ui = 1 << TAG} }, \
 	{ MODKEY|ControlMask|ShiftMask, KEY,      toggletag,      {.ui = 1 << TAG} },
 
-static const char *termcmd[]  = { "alacritty", NULL };
-static const char *roficmd[]	= { "rofi", "-show", "drun", NULL };
-static const char *firefoxcmd[]	= { "firefox", NULL };
-static const char *nemocmd[]	= { "nemo", NULL };
+#define SCRATCHKEYS(KEY,CMD) \
+	{ MODKEY,				KEY,	togglescratch,		{.v = CMD } }, \
+	{ MODKEY|ShiftMask,		KEY,	removescratch,		{.v = CMD } }, \
+	{ MODKEY|ControlMask,	KEY,	setscratch,			{.v = CMD } },
 
 static const char *sptermcmd[]	= { "t", "alacritty", "-T", "spterm", NULL };
+static const char *sppavucmd[]	= { "p", "pavucontrol", NULL };
+static const char *spspotcmd[]	= { "s", "spotify", NULL };
 
 static const Key keys[] = {
 	/* modifier                     key        function        argument */
-	{ MODKEY,                       XK_Return, spawn,          {.v = termcmd } },
-	{ MODKEY,                       XK_space,  spawn,          {.v = roficmd } },
-	{ MODKEY,                       XK_w,      spawn,          {.v = firefoxcmd } },
-	{ MODKEY,                       XK_e,      spawn,          {.v = nemocmd } },
-	{ MODKEY,                       XK_grave,  togglescratch,  {.v = sptermcmd } },
-	{ MODKEY|ShiftMask,             XK_grave,  removescratch,  {.v = sptermcmd } },
-	{ MODKEY|ControlMask,           XK_grave,  setscratch,     {.v = sptermcmd } },
-	{ MODKEY|ShiftMask,             XK_b,      togglebar,      {0} },
 	{ MODKEY,                       XK_h,      focusdir,       {.i = 0 } }, // left
 	{ MODKEY,                       XK_l,      focusdir,       {.i = 1 } }, // right
 	{ MODKEY,                       XK_k,      focusdir,       {.i = 2 } }, // up
@@ -177,6 +176,7 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_g,      setlayout,      {.v = &layouts[11]} },
 	{ MODKEY,						XK_comma,  cyclelayout,    {.i = -1 } },
 	{ MODKEY,						XK_period, cyclelayout,    {.i = +1 } },
+	{ MODKEY|ShiftMask,             XK_b,      togglebar,      {0} },
 	{ MODKEY|ShiftMask,             XK_space,  togglefloating, {0} },
 	{ MODKEY|ShiftMask,             XK_f,      togglefullscr,  {0} },
 	{ MODKEY|ShiftMask,             XK_s,      togglesticky,   {0} },
@@ -186,6 +186,9 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_Left,   viewprev,       {0} },
 	{ MODKEY|ShiftMask,             XK_Right,  tagtonext,      {0} },
 	{ MODKEY|ShiftMask,             XK_Left,   tagtoprev,      {0} },
+	SCRATCHKEYS(					XK_grave,				   sptermcmd)
+	SCRATCHKEYS(					XK_p,					   sppavucmd)
+	SCRATCHKEYS(					XK_s,					   spspotcmd)
 	TAGKEYS(                        XK_1,                      0)
 	TAGKEYS(                        XK_2,                      1)
 	TAGKEYS(                        XK_3,                      2)
@@ -206,7 +209,6 @@ static const Button buttons[] = {
 	{ ClkLtSymbol,          0,              Button1,        setlayout,      {0} },
 	{ ClkLtSymbol,          0,              Button3,        setlayout,      {.v = &layouts[2]} },
 	{ ClkWinTitle,          0,              Button2,        zoom,           {0} },
-	{ ClkStatusText,        0,              Button2,        spawn,          {.v = termcmd } },
 	{ ClkClientWin,         MODKEY,         Button1,        movemouse,      {0} },
 	{ ClkClientWin,         MODKEY,         Button2,        togglefloating, {0} },
 	{ ClkClientWin,         MODKEY,         Button3,        resizemouse,    {0} },

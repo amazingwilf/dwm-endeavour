@@ -5,6 +5,7 @@
 /* appearance */
 static const unsigned int borderpx  = 2;        /* border pixel of windows */
 static const unsigned int snap      = 32;       /* snap pixel */
+static const int swallowfloating    = 0;        /* 1 means swallow floating windows by default */
 static int floatposgrid_x           = 5;        /* float grid columns */
 static int floatposgrid_y           = 5;        /* float grid rows */
 static const char *toggle_float_pos  = "50% 50% 80% 80%"; // default floating position when triggering togglefloating
@@ -85,6 +86,8 @@ static const Rule rules[] = {
 	{ .class = "firefox", .tags = 1 << 1 },
 	{ .class = "Nemo", .tags = 1 << 2 },
 	{ .title = "spterm", .isfloating = 1, .scratchkey = 't', .floatpos = "50% 50% 75% 75%" },
+	{ .class = "Alacritty", .isterminal = 1 },
+	{ .title = "Event Tester", .noswallow = 1 },
 };
 
 static const char *const autostart[] = {
@@ -147,15 +150,21 @@ static const Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_grave,  removescratch,  {.v = sptermcmd } },
 	{ MODKEY|ControlMask,           XK_grave,  setscratch,     {.v = sptermcmd } },
 	{ MODKEY|ShiftMask,             XK_b,      togglebar,      {0} },
-	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
-	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
+	{ MODKEY,                       XK_h,      focusdir,       {.i = 0 } }, // left
+	{ MODKEY,                       XK_l,      focusdir,       {.i = 1 } }, // right
+	{ MODKEY,                       XK_k,      focusdir,       {.i = 2 } }, // up
+	{ MODKEY,                       XK_j,      focusdir,       {.i = 3 } }, // down
+	{ MODKEY|ShiftMask,             XK_h,      setmfact,       {.f = -0.05} },
+	{ MODKEY|ShiftMask,             XK_l,      setmfact,       {.f = +0.05} },
+	{ MODKEY|ShiftMask,             XK_k,      setcfact,       {.f = +0.25} },
+	{ MODKEY|ShiftMask,             XK_j,      setcfact,       {.f = -0.25} },
+	{ MODKEY|ShiftMask,             XK_o,      setcfact,       {.f =  0.00} },
+	{ MODKEY|ControlMask,           XK_h,      placedir,       {.i = 0 } }, // left
+	{ MODKEY|ControlMask,           XK_l,      placedir,       {.i = 1 } }, // right
+	{ MODKEY|ControlMask,           XK_k,      placedir,       {.i = 2 } }, // up
+	{ MODKEY|ControlMask,           XK_j,      placedir,       {.i = 3 } }, // down
 	{ MODKEY,                       XK_i,      incnmaster,     {.i = +1 } },
 	{ MODKEY,                       XK_d,      incnmaster,     {.i = -1 } },
-	{ MODKEY,                       XK_h,      setmfact,       {.f = -0.05} },
-	{ MODKEY,                       XK_l,      setmfact,       {.f = +0.05} },
-	{ MODKEY|ShiftMask,             XK_h,      setcfact,       {.f = +0.25} },
-	{ MODKEY|ShiftMask,             XK_l,      setcfact,       {.f = -0.25} },
-	{ MODKEY|ShiftMask,             XK_o,      setcfact,       {.f =  0.00} },
 	{ MODKEY,                       XK_equal,  incrgaps,       {.i = +1 } },
 	{ MODKEY,                       XK_minus,  incrgaps,       {.i = -1 } },
 	{ MODKEY|ShiftMask,             XK_minus,  togglegaps,     {0} },

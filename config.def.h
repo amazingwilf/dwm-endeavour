@@ -27,18 +27,25 @@ static const char col_gray1[]       = "#101010";
 static const char col_gray2[]       = "#555555";
 static const char col_gray3[]       = "#abb2bf";
 static const char col_blue[]        = "#61afef";
+static const char col_green[]       = "#91B362";
+static const char col_pink[]        = "#c678dd";
+static const char col_yellow[]      = "#F9AF4F";
 static const char col_gray4[]       = "#ededed";
 static const char col_cyan[]        = "#0101d1";
 static const char *colors[][3]      = {
 	/*						fg			bg         border   */
-	[SchemeNorm]		= { col_gray3,	col_gray1,	col_gray2 },
-	[SchemeSel]			= { col_gray4,	col_cyan,	col_blue  },
-	[SchemeLtSymbol]	= { col_blue,	col_gray1,	col_gray1 },
-	[SchemeTagsNorm]	= { col_gray2,	col_gray1,	col_gray1 },
-	[SchemeTagsOcc]		= { col_blue,	col_gray1,	col_gray1 },
-	[SchemeTagsSel]		= { col_gray4,	col_gray1,	col_gray1 },
-	[SchemeTitleNorm]	= { col_gray3,	col_gray1,	col_gray1 },
-	[SchemeTitleSel]	= { col_blue,	col_gray1,	col_gray1 },
+	[SchemeNorm]		= { col_gray3,	col_gray1,	col_gray2  },
+	[SchemeSel]			= { col_gray4,	col_cyan,	col_blue   },
+	[SchemeFloat]		= { col_gray3,	col_gray1,	col_pink   },
+	[SchemeSticky]		= { col_gray3,	col_gray1,	col_yellow },
+	[SchemeLtSymbol]	= { col_blue,	col_gray1,	col_gray1  },
+	[SchemeTagsNorm]	= { col_gray2,	col_gray1,	col_gray1  },
+	[SchemeTagsOcc]		= { col_blue,	col_gray1,	col_gray1  },
+	[SchemeTagsSel]		= { col_gray4,	col_gray1,	col_gray1  },
+	[SchemeTitleNorm]	= { col_gray3,	col_gray1,	col_gray1  },
+	[SchemeTitleSel]	= { col_blue,	col_gray1,	col_gray1  },
+	[SchemeScratchNorm]	= { col_gray3,	col_gray1,	col_gray2  },
+	[SchemeScratchSel]	= { col_gray4,	col_gray1,	col_green  },
 };
 
 static const unsigned int baralpha = 0xb0;
@@ -48,12 +55,16 @@ static const unsigned int alphas[][3]      = {
     /*						fg      bg        border*/
     [SchemeNorm]		= { OPAQUE, baralpha, borderalpha },
 	[SchemeSel]			= { OPAQUE, baralpha, borderalpha },
+	[SchemeFloat]		= { OPAQUE, baralpha, borderalpha },
+	[SchemeSticky]		= { OPAQUE, baralpha, borderalpha },
 	[SchemeLtSymbol]	= { OPAQUE, baralpha, borderalpha },
 	[SchemeTagsNorm]	= { OPAQUE, baralpha, borderalpha },
 	[SchemeTagsOcc]		= { OPAQUE, baralpha, borderalpha },
 	[SchemeTagsSel]		= { OPAQUE, baralpha, borderalpha },
 	[SchemeTitleNorm]	= { OPAQUE, baralpha, borderalpha },
 	[SchemeTitleSel]	= { OPAQUE, baralpha, borderalpha },
+	[SchemeScratchNorm]	= { OPAQUE, baralpha, borderalpha },
+	[SchemeScratchSel]	= { OPAQUE, baralpha, borderalpha },
 };
 
 /* tagging */
@@ -70,9 +81,10 @@ static const Rule rules[] = {
 	 *	WM_CLASS(STRING) = instance, class
 	 *	WM_NAME(STRING) = title
 	 */
-	{ .class = "Lxappearance", .isfloating = 1, .floatpos = "50% 50% -1h -1w" },
+	{ .class = "Lxappearance", .isfloating = 1, .floatpos = "50% 50% 1024w 768h" },
 	{ .class = "firefox", .tags = 1 << 1 },
 	{ .class = "Nemo", .tags = 1 << 2 },
+	{ .title = "spterm", .isfloating = 1, .scratchkey = 't', .floatpos = "50% 50% 75% 75%" },
 };
 
 static const char *const autostart[] = {
@@ -123,12 +135,17 @@ static const char *roficmd[]	= { "rofi", "-show", "drun", NULL };
 static const char *firefoxcmd[]	= { "firefox", NULL };
 static const char *nemocmd[]	= { "nemo", NULL };
 
+static const char *sptermcmd[]	= { "t", "alacritty", "-T", "spterm", NULL };
+
 static const Key keys[] = {
 	/* modifier                     key        function        argument */
 	{ MODKEY,                       XK_Return, spawn,          {.v = termcmd } },
 	{ MODKEY,                       XK_space,  spawn,          {.v = roficmd } },
 	{ MODKEY,                       XK_w,      spawn,          {.v = firefoxcmd } },
 	{ MODKEY,                       XK_e,      spawn,          {.v = nemocmd } },
+	{ MODKEY,                       XK_grave,  togglescratch,  {.v = sptermcmd } },
+	{ MODKEY|ShiftMask,             XK_grave,  removescratch,  {.v = sptermcmd } },
+	{ MODKEY|ControlMask,           XK_grave,  setscratch,     {.v = sptermcmd } },
 	{ MODKEY|ShiftMask,             XK_b,      togglebar,      {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
@@ -153,6 +170,7 @@ static const Key keys[] = {
 	{ MODKEY,						XK_period, cyclelayout,    {.i = +1 } },
 	{ MODKEY|ShiftMask,             XK_space,  togglefloating, {0} },
 	{ MODKEY|ShiftMask,             XK_f,      togglefullscr,  {0} },
+	{ MODKEY|ShiftMask,             XK_s,      togglesticky,   {0} },
 	{ MODKEY,                       XK_0,      view,           {.ui = ~0 } },
 	{ MODKEY|ShiftMask,             XK_0,      tag,            {.ui = ~0 } },
 	{ MODKEY,                       XK_Right,  viewnext,       {0} },
